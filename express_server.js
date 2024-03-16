@@ -67,6 +67,11 @@ app.post('/urls/:id/delete', (req, res) => {
   delete urlDatabase[id];
   res.redirect('/urls')
 })
+app.post('/login', (req, res) => {
+  const { username } = req.body;
+  res.cookie('username', username)
+  res.redirect('/urls')
+})
 
 // server listen request
 app.listen(PORT, () => {
