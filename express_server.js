@@ -89,8 +89,8 @@ app.post('/urls/:id/delete', (req, res) => {
   res.redirect('/urls')
 })
 app.post('/login', (req, res) => {
-  const { username } = req.body;
-  if (!username.trim()) {
+  const username = req.body.username.trim();
+  if (!username) {
     const templateVars = {
       urls: urlDatabase,
       submitted: true,
@@ -103,8 +103,7 @@ app.post('/login', (req, res) => {
   res.redirect('/urls')
 })
 app.post('/logout', (req, res) => {
-  const { username } = req.body;
-  res.clearCookie('username', username)
+  res.clearCookie('username')
   res.redirect('/urls')
 })
 
