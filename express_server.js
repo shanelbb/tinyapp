@@ -16,6 +16,8 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
+const users = {}
+
 // app functions
 function generateRandomString(length) {
   let result = '';
@@ -33,19 +35,21 @@ app.get('/', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  const username = req.cookies['username'];
+  const user = req.cookies['user_id'];
   const templateVars = {
     urls: urlDatabase,
     submitted: false,
     error: null,
-    username,
+    user: users[user],
   };
   res.render('urls_index', templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
+  const userId = req.cookies['user_id'];
+  const user = users[userId]
   const templateVars = {
-    username: req.cookies["username"],
+    user,
     submitted: false,
     error: null,
   };
@@ -54,11 +58,11 @@ app.get("/urls/new", (req, res) => {
 
 app.get('/urls/:id', (req, res) => {
   const id = req.params.id;
-  const username = req.cookies["username"];
+  const user = req.cookies["user_id"];
   const templateVars = {
     id,
     longURL: urlDatabase[id],
-    username,
+    user: users[user],
     submitted: false,
     error: null,
   };
@@ -72,8 +76,11 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get('/register', (req, res) => {
-  const { email, password } = req.body;
-  res.render('register');
+  const user = req.cookies["user_id"];
+  const templateVars = {
+    user: users[user]
+  };
+  res.render('register', templateVars);
 });
 
 // route POST requests
@@ -103,18 +110,50 @@ app.post('/login', (req, res) => {
       urls: urlDatabase,
       submitted: true,
       error: "Username input cannot be empty!",
-      username: undefined
+      user: undefined
     };
     return res.render('urls_index', templateVars);
   }
-  res.cookie('username', username);
-  res.redirect('/urls');
+
+  const userID = req.cookies['user_id'];
+  const user = users[userID] ? users[userID] : null;
+
+  if (user) {
+    res.cookie("user_id", user);
+    res.redirect("/urls");
+    return
+  } 
+  
+  res.redirect('/register')
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('username');
+  res.clearCookie('user_id');
   res.redirect('/urls');
 });
+
+app.post('/register', (req, res) => {
+  const id = generateRandomString(6);
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).send("Email and password cannot be blank.");
+  }
+
+  for (const userProp in users) {
+    if (users[userProp].email === email) {
+      return res.status(400).send("Email already registered.");
+    }
+  }
+
+  users[id] = {
+    id,
+    email,
+    password,
+  };
+
+  res.cookie('user_id', id);
+  res.redirect('/urls');
+})
 
 // server listen request
 app.listen(PORT, () => {
