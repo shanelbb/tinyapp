@@ -102,6 +102,11 @@ app.post('/login', (req, res) => {
   res.cookie('username', username)
   res.redirect('/urls')
 })
+app.post('/logout', (req, res) => {
+  const { username } = req.body;
+  res.clearCookie('username', username)
+  res.redirect('/urls')
+})
 
 // server listen request
 app.listen(PORT, () => {
