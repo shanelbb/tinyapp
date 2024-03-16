@@ -44,10 +44,18 @@ app.get('/urls/:id', (req, res) => {
   res.render("urls_show", templateVars)
 })
 
+app.get("/u/:id", (req, res) => {
+  const id = req.params.id
+  const longURL = urlDatabase[id]
+  res.redirect(longURL);
+});
+
 // route POST requests
 app.post('/urls', (req, res) => {
-  console.log(req.body);
-  res.send('ok')
+  const id = generateRandomString(6);
+  urlDatabase[id] = req.body.longURL
+  console.log(urlDatabase)
+  res.redirect(`urls/${id}`)
 })
 
 // server listen request
