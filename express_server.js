@@ -55,7 +55,7 @@ app.post('/urls', (req, res) => {
   const id = generateRandomString(6);
   urlDatabase[id] = req.body.longURL
   console.log(urlDatabase)
-  res.redirect(`urls/${id}`)
+  res.redirect(`/urls/${id}`)
 })
 
 // server listen request
