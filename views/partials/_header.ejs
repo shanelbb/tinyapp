@@ -12,13 +12,17 @@
     </div>
     <div>
       <% if (!user) { %>
-      <form class="form-inline" method="POST" action="/login">
-        <div class="form-group mr-2">
-          <label for="username" class="sr-only">Username</label>
-          <input type="text" id="username" name="username" placeholder="<% if (error && submitted) { %> Input cannot be empty! <% } else { %> Username <% } %>" />
-        </div>
-        <button type="submit" class="btn btn-outline-dark">Log in</button>
-      </form>
+      <div class="d-flex">
+        <form class="form-inline" method="POST" action="/login">
+          <div class="form-group mr-2">
+            <label for="username" class="sr-only">Username</label>
+            <input type="text" id="username" name="username" placeholder="<% if (error && submitted) { %> Input cannot be empty! <% } else { %> Username <% } %>" />
+          </div>
+          <button type="submit" class="btn btn-outline-dark mr-2">Log in</button>
+          <a href="/register"><button type="button" class="btn btn-outline-dark">Register</button></a>
+        </form>
+      </div>
+
       <% } else { %>
       <form class="form-inline" method="POST" action="/logout">
         <div class="form-group mr-2">
