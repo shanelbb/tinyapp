@@ -32,7 +32,7 @@ const generateRandomString = (length) => {
 const checkForUser = (email) => {
   for (const user in users) {
     if (users[user].email === email) {
-      return users[user];
+        return users[user];
     }
   }
   return null;
@@ -80,9 +80,9 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  const user = req.cookies["user_id"];
+  const userId = req.cookies["user_id"];
   const templateVars = {
-    user: users[user],
+    user: users[userId],
     query: req.query.error,
   };
   res.render('login', templateVars);
@@ -123,28 +123,18 @@ app.post("/login", (req, res) => {
     return;
   }
   
-  const userExists = checkForUser(email);
-  if (userExists === null) {
-    res.redirect(`/login?error=validation`);
-  } else {
-    res.cookie("user_id", userExists);
+  const userId = checkForUser(email);
+  if (userId) {
+    res.cookie("user_id", userId);
     res.redirect("/urls");
-    return;
+  } else {
+    res.redirect(`/login?error=validation`);
   }
-
-  const userID = req.cookies["user_id"];
-  const passwordVerification = users[userID]["password"];
-  const user = users[userID] ? users[userID] : null;
-  if (password === passwordVerification) {
-    res.redirect('/urls');
-  }
-
-  res.redirect("/register");
 });
 
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id");
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.post("/register", (req, res) => {
@@ -153,9 +143,12 @@ app.post("/register", (req, res) => {
   if (!email || !password) {
     res.redirect(`/register?error=blankInput`);
   }
+
+
   
   if (checkForUser(email)) {
     res.redirect(`/register?error=duplicate`);
+    return;
   }
 
   users[id] = {
