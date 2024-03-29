@@ -80,8 +80,10 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get('/login', (req, res) => {
+  const user = req.cookies["user_id"];
   const templateVars = {
-    query: req.query.error
+    user: users[user],
+    query: req.query.error,
   };
   res.render('login', templateVars);
 });
@@ -115,23 +117,23 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const {email, password} = req.body;
+  const { email, password } = req.body;
   if (!email || !password) {
     res.redirect(`/login?error=blankInput`);
+    return;
   }
-
-  if (!checkForUser(email)) {
+  
+  const userExists = checkForUser(email);
+  if (userExists === null) {
     res.redirect(`/login?error=validation`);
-  }
-
-  if (user) {
-    res.cookie("user_id", user);
+  } else {
+    res.cookie("user_id", userExists);
     res.redirect("/urls");
     return;
   }
 
   const userID = req.cookies["user_id"];
-  const passwordVerification = users[userID].password
+  const passwordVerification = users[userID]["password"];
   const user = users[userID] ? users[userID] : null;
   if (password === passwordVerification) {
     res.redirect('/urls');
