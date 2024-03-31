@@ -32,7 +32,7 @@ const generateRandomString = (length) => {
 const checkForUser = (email) => {
   for (const user in users) {
     if (users[user].email === email) {
-        return users[user];
+      return users[user];
     }
   }
   return null;
@@ -45,30 +45,27 @@ app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     user: users[user],
+    alert: 'Page does not exist!'
   };
   res.render("urls_index", templateVars);
 });
 
 app.get("/urls/new", (req, res) => {
-  const userId = req.cookies["user_id"];
-  const user = users[userId];
+  if (!req.cookies["user_id"]) {
+    return res.redirect("/login");
+  }
   const templateVars = {
-    user,
-    submitted: false,
-    error: null,
+    user: users[req.cookies["user_id"]]
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
-  const user = req.cookies["user_id"];
   const templateVars = {
     id,
     longURL: urlDatabase[id],
-    user: users[user],
-    submitted: false,
-    error: null,
+    user: users[req.cookies["user_id"]],
   };
   res.render("urls_show", templateVars);
 });
@@ -80,15 +77,22 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get('/login', (req, res) => {
+  if (req.cookies.user_id) {
+    return res.redirect("/urls");
+  }
   const userId = req.cookies["user_id"];
   const templateVars = {
     user: users[userId],
     query: req.query.error,
   };
+
   res.render('login', templateVars);
 });
 
 app.get("/register", (req, res) => {
+  if (req.cookies["user_id"]) {
+    return res.redirect("/urls");
+  }
   const user = req.cookies["user_id"];
   const templateVars = {
     user: users[user],
@@ -99,6 +103,9 @@ app.get("/register", (req, res) => {
 
 // route POST requests
 app.post("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.redirect("/login");
+  }
   const id = generateRandomString(6);
   urlDatabase[id] = req.body.longURL;
   res.redirect(`/urls/${id}`);
