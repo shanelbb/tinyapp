@@ -1,24 +1,37 @@
-// global variables
+// ----------------
+// GLOBAL VARIABLES
+// ----------------
 const express = require("express");
 const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = 8080;
 
-// app setup
+// --------
+// APP SETUP
+// --------
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}));
 app.use(cookieParser());
 
-
-// app data
+// --------
+// APP DATA
+// --------
 const urlDatabase = {
-  b2xVn2: "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
 };
 
 const users = {};
 
-// app functions
+// -------------
+// APP FUNCTIONS
+// -------------
 const generateRandomString = (length) => {
   let result = "";
   const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -38,14 +51,31 @@ const checkForUser = (email) => {
   return null;
 };
 
-// route GET requests
+const urlsForUser = (id) => {
+  let userUrls = {};
+  for (let urlId in urlDatabase) {
+    if (urlDatabase[urlId].userID === id) {
+      userUrls[urlId] = urlDatabase[urlID]
+    }
+  }
+  return userUrls;
+}
+
+// ------------------
+// ROUTE GET REQUESTS
+// ------------------
 
 app.get("/urls", (req, res) => {
   const user = req.cookies["user_id"];
+  if (!user) {
+    return res.redirect('/login');
+  }
+
+  const userOwnedURLs = urlsForUser(user)
+
   const templateVars = {
-    urls: urlDatabase,
+    urls: userOwnedURLs,
     user: users[user],
-    alert: 'Page does not exist!'
   };
   res.render("urls_index", templateVars);
 });
@@ -55,7 +85,7 @@ app.get("/urls/new", (req, res) => {
     return res.redirect("/login");
   }
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[req.cookies["user_id"]],
   };
   res.render("urls_new", templateVars);
 });
@@ -64,7 +94,7 @@ app.get("/urls/:id", (req, res) => {
   const id = req.params.id;
   const templateVars = {
     id,
-    longURL: urlDatabase[id],
+    url: urlDatabase[id],
     user: users[req.cookies["user_id"]],
   };
   res.render("urls_show", templateVars);
@@ -72,11 +102,11 @@ app.get("/urls/:id", (req, res) => {
 
 app.get("/u/:id", (req, res) => {
   const id = req.params.id;
-  const longURL = urlDatabase[id];
+  const longURL = urlDatabase[id].longURL;
   res.redirect(longURL);
 });
 
-app.get('/login', (req, res) => {
+app.get("/login", (req, res) => {
   if (req.cookies.user_id) {
     return res.redirect("/urls");
   }
@@ -85,8 +115,7 @@ app.get('/login', (req, res) => {
     user: users[userId],
     query: req.query.error,
   };
-
-  res.render('login', templateVars);
+  res.render("login", templateVars);
 });
 
 app.get("/register", (req, res) => {
@@ -96,12 +125,15 @@ app.get("/register", (req, res) => {
   const user = req.cookies["user_id"];
   const templateVars = {
     user: users[user],
-    query: req.query.error
+    query: req.query.error,
   };
   res.render("register", templateVars);
 });
 
-// route POST requests
+// -------------------
+// ROUTE POST REQUESTS
+// -------------------
+
 app.post("/urls", (req, res) => {
   if (!req.cookies["user_id"]) {
     return res.redirect("/login");
@@ -124,12 +156,12 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  const { email, password } = req.body;
+  const {email, password} = req.body;
   if (!email || !password) {
     res.redirect(`/login?error=blankInput`);
     return;
   }
-  
+
   const userId = checkForUser(email);
   if (userId) {
     res.cookie("user_id", userId);
@@ -147,12 +179,12 @@ app.post("/logout", (req, res) => {
 app.post("/register", (req, res) => {
   const id = generateRandomString(6);
   const {email, password} = req.body;
+
   if (!email || !password) {
     res.redirect(`/register?error=blankInput`);
+    return;
   }
 
-
-  
   if (checkForUser(email)) {
     res.redirect(`/register?error=duplicate`);
     return;
@@ -163,12 +195,14 @@ app.post("/register", (req, res) => {
     email,
     password,
   };
-
+ 
   res.cookie("user_id", id);
   res.redirect("/urls");
 });
 
-// server listen request
+// ---------------------
+// SERVER LISTEN REQUEST
+// ---------------------
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}!`);
 });
