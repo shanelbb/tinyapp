@@ -3,6 +3,7 @@
 // ----------------
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080;
 
@@ -42,10 +43,10 @@ const generateRandomString = (length) => {
   return result;
 };
 
-const checkForUser = (email) => {
-  for (const user in users) {
-    if (users[user].email === email) {
-      return users[user];
+const checkForUser = (email, password) => {
+  for (let user in users) {
+    if (users[user].email === email && bcrypt.compareSync(password, users[user].password)) {
+      return user;
     }
   }
   return null;
@@ -139,19 +140,43 @@ app.post("/urls", (req, res) => {
     return res.redirect("/login");
   }
   const id = generateRandomString(6);
-  urlDatabase[id] = req.body.longURL;
+  urlDatabase[id] = {
+    longURL: req.body.longURL,
+    userID: req.cookies["user_id"]
+  }
   res.redirect(`/urls/${id}`);
 });
 
 app.post("/urls/:id", (req, res) => {
-  const id = req.params.id;
-  urlDatabase[id] = req.body.longURL;
+  const userID = req.cookies["user_id"];
+  const urlID = req.params.id;
+  if (!urlDatabase[urlID]) {
+    return res.status(404).send("URL not found.");
+  }
+
+  // Check if the user owns the URL
+  if (urlDatabase[urlID].userID !== userID) {
+    return res.status(403).send("You do not have permission to edit this URL.");
+  }
+
+  urlDatabase[urlID] = req.body.longURL;
   res.redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id];
+  const userID = req.cookies["user_id"];
+  const urlID = req.params.id;
+  const url = urlDatabase[urlID];
+
+  if (!url) {
+    return res.status(404).send("URL not found.");
+  }
+
+  if (url.userId !== userID) {
+    return res.status(403).send("You do not have permission to delete this URL.");
+  }
+
+  delete urlDatabase[urlID];
   res.redirect("/urls");
 });
 
@@ -162,7 +187,8 @@ app.post("/login", (req, res) => {
     return;
   }
 
-  const userId = checkForUser(email);
+  const userId = checkForUser(email, password);
+
   if (userId) {
     res.cookie("user_id", userId);
     res.redirect("/urls");
@@ -178,7 +204,8 @@ app.post("/logout", (req, res) => {
 
 app.post("/register", (req, res) => {
   const id = generateRandomString(6);
-  const {email, password} = req.body;
+  const { email, password } = req.body;
+  const hashedPassword = bcrypt.hashSync(password, 10)
 
   if (!email || !password) {
     res.redirect(`/register?error=blankInput`);
@@ -193,10 +220,10 @@ app.post("/register", (req, res) => {
   users[id] = {
     id,
     email,
-    password,
+    password : hashedPassword
   };
  
-  res.cookie("user_id", id);
+  res.cookie("user_id", users[id]);
   res.redirect("/urls");
 });
 
