@@ -4,6 +4,7 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
+const { getUserByEmail, verifyUser, generateRandomString } = require('helpers.js')
 const app = express();
 const PORT = 8080;
 
@@ -15,9 +16,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(
   cookieSession({
     name: "session",
-    keys: [
-      ["key1", "key2"]
-    ],
+    keys: ["key1", "key2"],
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   })
 );
@@ -41,24 +40,6 @@ const users = {};
 // -------------
 // APP FUNCTIONS
 // -------------
-const generateRandomString = (length) => {
-  let result = "";
-  const chars = "0123456789abcdefghijklmnopqrstuvwxyz";
-  const charLength = chars.length;
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * charLength));
-  }
-  return result;
-};
-
-const checkForUser = (email, password) => {
-  for (let user in users) {
-    if (users[user].email === email && bcrypt.compareSync(password, users[user].password)) {
-      return user;
-    }
-  }
-  return null;
-};
 
 const urlsForUser = (id) => {
   let userUrls = {};
@@ -195,7 +176,7 @@ app.post("/login", (req, res) => {
     return;
   }
 
-  const userId = checkForUser(email, password);
+  const userId = verifyUser(email, password, users);
 
   if (userId) {
     req.session.user_id = userId;
@@ -220,7 +201,7 @@ app.post("/register", (req, res) => {
     return;
   }
 
-  if (checkForUser(email, password)) {
+  if (getUserByEmail(email, users)) {
     res.redirect(`/register?error=duplicate`);
     return;
   }
