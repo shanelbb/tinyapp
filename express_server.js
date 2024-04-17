@@ -2,7 +2,7 @@
 // GLOBAL VARIABLES
 // ----------------
 const express = require("express");
-const cookieParser = require("cookie-parser");
+const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
 const app = express();
 const PORT = 8080;
@@ -12,7 +12,15 @@ const PORT = 8080;
 // --------
 app.set("view engine", "ejs");
 app.use(express.urlencoded({extended: true}));
-app.use(cookieParser());
+app.use(
+  cookieSession({
+    name: "session",
+    keys: [
+      ["key1", "key2"]
+    ],
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+  })
+);
 
 // --------
 // APP DATA
@@ -67,7 +75,7 @@ const urlsForUser = (id) => {
 // ------------------
 
 app.get("/urls", (req, res) => {
-  const user = req.cookies["user_id"];
+  const user = req.session["user_id"];
   if (!user) {
     return res.redirect('/login');
   }
@@ -82,11 +90,11 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     return res.redirect("/login");
   }
   const templateVars = {
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   res.render("urls_new", templateVars);
 });
@@ -96,7 +104,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id,
     url: urlDatabase[id],
-    user: users[req.cookies["user_id"]],
+    user: users[req.session.user_id],
   };
   res.render("urls_show", templateVars);
 });
@@ -108,10 +116,10 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  if (req.cookies.user_id) {
+  if (req.session.user_id) {
     return res.redirect("/urls");
   }
-  const userId = req.cookies["user_id"];
+  const userId = req.session["user_id"];
   const templateVars = {
     user: users[userId],
     query: req.query.error,
@@ -120,10 +128,10 @@ app.get("/login", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     return res.redirect("/urls");
   }
-  const user = req.cookies["user_id"];
+  const user = req.session["user_id"];
   const templateVars = {
     user: users[user],
     query: req.query.error,
@@ -136,19 +144,19 @@ app.get("/register", (req, res) => {
 // -------------------
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session["user_id"]) {
     return res.redirect("/login");
   }
   const id = generateRandomString(6);
   urlDatabase[id] = {
     longURL: req.body.longURL,
-    userID: req.cookies["user_id"]
+    userID: req.session.user_id
   }
   res.redirect(`/urls/${id}`);
 });
 
 app.post("/urls/:id", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session["user_id"];
   const urlID = req.params.id;
   if (!urlDatabase[urlID]) {
     return res.status(404).send("URL not found.");
@@ -159,12 +167,12 @@ app.post("/urls/:id", (req, res) => {
     return res.status(403).send("You do not have permission to edit this URL.");
   }
 
-  urlDatabase[urlID] = req.body.longURL;
+  urlDatabase[urlID].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session["user_id"];
   const urlID = req.params.id;
   const url = urlDatabase[urlID];
 
@@ -190,7 +198,7 @@ app.post("/login", (req, res) => {
   const userId = checkForUser(email, password);
 
   if (userId) {
-    res.cookie("user_id", userId);
+    req.session.user_id = userId;
     res.redirect("/urls");
   } else {
     res.redirect(`/login?error=validation`);
@@ -198,7 +206,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session = null;
   res.redirect("/login");
 });
 
@@ -212,7 +220,7 @@ app.post("/register", (req, res) => {
     return;
   }
 
-  if (checkForUser(email)) {
+  if (checkForUser(email, password)) {
     res.redirect(`/register?error=duplicate`);
     return;
   }
@@ -223,7 +231,7 @@ app.post("/register", (req, res) => {
     password : hashedPassword
   };
  
-  res.cookie("user_id", users[id]);
+  req.session.user_id = id;
   res.redirect("/urls");
 });
 
