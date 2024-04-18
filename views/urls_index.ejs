@@ -10,11 +10,6 @@
   <body>
     <%- include('partials/_header') %>
     <main style="margin: 1em">
-      <% if (!user) { %>
-      <div class="d-flex justify-content-center">
-        <h3>Please log in to view your URLs</h3>
-      </div>
-      <% } else { %>
       <h3>My URLs</h3>
       <table class="table">
         <thead>
@@ -28,7 +23,7 @@
         <tbody>
           <% for (let id in urls) { %>
           <tr>
-            <td><a href="<%= urls[id].longURL %>" target="_blank"><%= id %></a></td>
+            <td><a href="/u/<%= id %>" target="_blank"><%= id %></a></td>
             <td><%= urls[id].longURL %></td>
             <td class="">
               <a href="/urls/<%= id %>"><button class="btn btn-outline-primary" type="submit">Edit</button></a>
@@ -40,7 +35,6 @@
           <% } %>
         </tbody>
       </table>
-      <% } %>
     </main>
 
     <!-- Bootstrap JS -->

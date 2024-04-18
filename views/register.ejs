@@ -7,16 +7,9 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous" />
     <title>TinyApp</title>
   </head>
-  <body class="p-3">
-    <header>
-      <h3>Register</h3>
-      <% if(query === 'duplicate') { %>
-      <h6 class="text-danger">That email is already registered.</h6>
-      <% } %> <% if(query === 'blankInput') { %>
-      <h6 class="text-danger">Email and Password cannot be blank.</h6>
-      <% } %>
-    </header>
-    <main>
+  <body>
+    <%- include('partials/_header') %>
+    <main class="p-3">
       <form method="POST" action="/register">
         <div class="form-group">
           <label for="email">Email address</label>
@@ -28,7 +21,6 @@
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
       </form>
-      <p class="pt-3">Already have an account? Go to <a href="/login">login</a> page.</p>
     </main>
 
     <!-- Bootstrap JS -->

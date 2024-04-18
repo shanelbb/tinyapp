@@ -1,17 +1,18 @@
 const bcrypt = require("bcryptjs");
-const getUserByEmail = function(email, userObj) {
+const getUserByEmail = function(email, userDatabase) {
   
-  if (typeof userObj !== "object" || userObj === null) {
-    throw new TypeError(`${userObj} is not a valid object`);
+  if (typeof userDatabase !== "object" || userDatabase === null) {
+    throw new TypeError(`${userDatabase} is not a valid object`);
   }
   // Check if 'email' is a string and not null
   if (typeof email !== "string" || email === null) {
     throw new TypeError(`${email} is not a valid string`);
   }
 
-  for (let key in userObj) {
-    if (userObj[key].email === email) {
-      return userObj[key];
+  for (let key in userDatabase) {
+    const user = userDatabase[key]
+    if (user.email === email) {
+      return user;
     }
   }
   return null;
