@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
-const getUserByEmail = function (email, userObj) {
+const getUserByEmail = function(email, userObj) {
+  
   if (typeof userObj !== "object" || userObj === null) {
     throw new TypeError(`${userObj} is not a valid object`);
   }
