@@ -1,4 +1,27 @@
 const bcrypt = require("bcryptjs");
+
+// --------
+// APP DATA
+// --------
+const urlDatabase = {
+  b6UTxQ: {
+    id: "b6UTxQ",
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
+  },
+  i3BoGr: {
+    id: "i3BoGr",
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
+  },
+};
+
+const userDatabase = {};
+
+// -------------
+// APP FUNCTIONS
+// -------------
+
 const getUserByEmail = function(email, userDatabase) {
   
   if (typeof userDatabase !== "object" || userDatabase === null) {
@@ -28,18 +51,21 @@ const generateRandomString = (length) => {
   return result;
 };
 
-const verifyUser = function (email, password, usersObj) {
-  for (let key in usersObj) {
-    // Check if the email matches and then use bcrypt to compare the password
-    if (usersObj[key].email === email && bcrypt.compareSync(password, usersObj[key].password)) {
-      return key; // Return user's ID on successful match
+const urlsForUser = (user) => {
+  let urls = {};
+  for (let id in urlDatabase) {
+    if (urlDatabase[id].userID === user.id) {
+      urls[id] = urlDatabase[id];
     }
   }
-  return null; // Return null if no matching user is found
+  return urls;
 };
 
+
 module.exports = {
+  urlDatabase,
+  userDatabase,
   getUserByEmail,
   generateRandomString,
-  verifyUser,
+  urlsForUser
 };

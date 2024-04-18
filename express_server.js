@@ -4,7 +4,7 @@
 const express = require("express");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
-const {getUserByEmail, verifyUser, generateRandomString} = require("./helpers");
+const {urlDatabase, userDatabase, getUserByEmail, generateRandomString, urlsForUser} = require("./helpers");
 const app = express();
 const PORT = 8080;
 
@@ -21,38 +21,6 @@ app.use(
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
   })
 );
-
-// --------
-// APP DATA
-// --------
-const urlDatabase = {
-  b6UTxQ: {
-    id: "b6UTxQ",
-    longURL: "https://www.tsn.ca",
-    userID: "aJ48lW",
-  },
-  i3BoGr: {
-    id: "i3BoGr",
-    longURL: "https://www.google.ca",
-    userID: "aJ48lW",
-  },
-};
-
-const userDatabase = {};
-
-// -------------
-// APP FUNCTIONS
-// -------------
-
-const urlsForUser = (user) => {
-  let urls = {};
-  for (let id in urlDatabase) {
-    if (urlDatabase[id].userID === user.id) {
-      urls[id] = urlDatabase[id];
-    }
-  }
-  return urls;
-};
 
 // ------------------
 // ROUTE GET REQUESTS
@@ -219,7 +187,7 @@ app.post("/login", (req, res) => {
 
   const user = getUserByEmail(email, userDatabase);
   if (!user || !bcrypt.compareSync(password, user.password)) {
-    res.send("Invalid login");
+    res.status(403).send("Invalid login");
     return;
   }
 
